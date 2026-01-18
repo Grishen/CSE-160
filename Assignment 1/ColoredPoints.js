@@ -88,6 +88,8 @@ function addActionsForHtmlUI(){
 
   document.getElementById('green').onclick = function() {g_selectedColor = [0.0,1.0,0.0,1.0];};
   document.getElementById('red').onclick = function() {g_selectedColor = [1.0,0.0,0.0,1.0];};
+
+  document.getElementById('drawPicture').onclick = function() {drawMyPicture();};
 }
 
 function main() {
@@ -176,4 +178,49 @@ function renderAllShapes(){
   for(var i = 0; i < len; i++) {
     g_shapesList[i].render();
   }
+}
+
+function drawMyPicture() {
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  // --- SKY (4 Triangles) ---
+  // Background gradient-ish sky
+  gl.uniform4f(u_FragColor, 0.2, 0.1, 0.4, 1.0); // Dark Purple
+  drawTriangle([-1, 1, 1, 1, -1, -1]);
+  drawTriangle([1, 1, 1, -1, -1, -1]);
+  // Sunset Glow
+  gl.uniform4f(u_FragColor, 0.6, 0.2, 0.4, 1.0); // Magenta
+  drawTriangle([-1, 0, 1, 0, 0, 0.5]);
+  drawTriangle([-1, -0.2, 1, -0.2, 0, 0.3]);
+
+  // --- THE SUN (4 Triangles) ---
+  gl.uniform4f(u_FragColor, 1.0, 0.8, 0.0, 1.0); // Yellow/Gold
+  // Approximating a circle/diamond sun
+  drawTriangle([0, 0.2, -0.2, 0, 0.2, 0]); 
+  drawTriangle([0, -0.2, -0.2, 0, 0.2, 0]);
+  drawTriangle([0, 0.2, -0.1, 0.3, 0.1, 0.3]);
+  drawTriangle([0, -0.2, -0.1, -0.3, 0.1, -0.3]);
+
+  // --- FAR MOUNTAINS (3 Triangles) ---
+  gl.uniform4f(u_FragColor, 0.3, 0.3, 0.5, 1.0); // Muted Blue/Grey
+  drawTriangle([-1.0, -0.2, -0.4, -0.2, -0.7, 0.3]);
+  drawTriangle([-0.2, -0.2, 0.6, -0.2, 0.2, 0.4]);
+  drawTriangle([0.4, -0.2, 1.0, -0.2, 0.7, 0.2]);
+
+  // --- NEAR MOUNTAINS (4 Triangles) ---
+  gl.uniform4f(u_FragColor, 0.1, 0.1, 0.2, 1.0); // Darker Silhouette
+  drawTriangle([-0.8, -0.5, 0.0, -0.5, -0.4, 0.2]);
+  drawTriangle([-0.2, -0.5, 0.8, -0.5, 0.3, 0.1]);
+  drawTriangle([0.4, -0.5, 1.2, -0.5, 0.8, 0.3]);
+  drawTriangle([-1.2, -0.5, -0.4, -0.5, -0.8, 0.0]);
+
+  // --- FOREGROUND / GROUND (5 Triangles) ---
+  gl.uniform4f(u_FragColor, 0.05, 0.2, 0.05, 1.0); // Dark Green
+  drawTriangle([-1, -1, 1, -1, -1, -0.5]);
+  drawTriangle([1, -1, -1, -0.5, 1, -0.5]);
+  // Small bushes/rocks
+  gl.uniform4f(u_FragColor, 0.0, 0.1, 0.0, 1.0); 
+  drawTriangle([-0.6, -0.6, -0.4, -0.6, -0.5, -0.4]);
+  drawTriangle([0.1, -0.7, 0.3, -0.7, 0.2, -0.5]);
+  drawTriangle([0.6, -0.6, 0.8, -0.6, 0.7, -0.4]);
 }
