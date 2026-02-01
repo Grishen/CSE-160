@@ -345,12 +345,41 @@ function drawLion() {
   base.setTranslate(0, -0.2 + g_pokeHeight, 0); 
   base.scale(0.45, 0.45, 0.45); 
 
-  // ===== THE BODY (Adjusted for Clearance) =====
+`  // ===== THE BODY (Adjusted for Clearance) =====
   const body = new Matrix4(base);
   // Slightly shorter body length to leave a "neck gap" for the mane to swing
   body.scale(3.5, 1.1, 1.3); 
   body.translate(0, 0, 0); // Push the body back slightly
   drawCube(body, bodyColor);
+`
+// ===== THE BODY & HINDQUARTERS =====
+  // 1. Main Torso
+  const body = new Matrix4(base);
+  body.scale(3, 1.1, 1.3); // Slightly shorter to make room for haunches
+  body.translate(-0.1, 0, 0); 
+  drawCube(body, bodyColor);
+
+  // 2. Left Haunch (The "Butt Curve" - Left Side)
+  const leftHaunch = new Matrix4(base);
+  // Position at the back-left of the torso
+  leftHaunch.translate(-1.3, -0.05, 0.35); 
+  leftHaunch.rotate(-5, 0, 1, 0); // Slight inward angle for the "curve"
+  leftHaunch.scale(1.3, 1.05, 0.7); 
+  drawCube(leftHaunch, bodyColor);
+
+  // 3. Right Haunch (The "Butt Curve" - Right Side)
+  const rightHaunch = new Matrix4(base);
+  // Position at the back-right of the torso
+  rightHaunch.translate(-1.3, -0.05, -0.35);
+  rightHaunch.rotate(5, 0, 1, 0); // Mirror the inward angle
+  rightHaunch.scale(1.3, 1.05, 0.7);
+  drawCube(rightHaunch, bodyColor);
+
+  // 4. Rear Filler (The "Tail Base" curve)
+  const rearFiller = new Matrix4(base);
+  rearFiller.translate(-1.5, 0, 0);
+  rearFiller.scale(0.5, 0.9, 0.8);
+  drawCube(rearFiller, bodyColor);
 
   // ===== THE HEAD & COLLAR HIERARCHY =====
   const headBase = new Matrix4(base);
