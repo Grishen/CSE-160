@@ -345,7 +345,45 @@ function drawLion() {
   base.setTranslate(0, -0.2 + g_pokeHeight, 0); 
   base.scale(0.45, 0.45, 0.45); 
 
-  // ===== 1. THE BODY =====
+  // ===== THE BODY (Adjusted for Clearance) =====
+  const body = new Matrix4(base);
+  // Slightly shorter body length to leave a "neck gap" for the mane to swing
+  body.scale(2.8, 1.1, 1.3); 
+  body.translate(-0.1, 0, 0); // Push the body back slightly
+  drawCube(body, bodyColor);
+
+  // ===== THE HEAD & COLLAR HIERARCHY =====
+  const headBase = new Matrix4(base);
+  headBase.translate(2.3, 0.6, 0.0); // Pivot point pushed forward
+  headBase.rotate(g_headAngle, 0, 1, 0); 
+
+  // --- THE MANE "SHIELD" ---
+  // We draw this first relative to the head so it "covers" the neck area
+  // Back Mane (The "Priority" Shield)
+  // This is wide and tall to ensure it stays between the head and the body
+  const maneShield = new Matrix4(headBase);
+  maneShield.translate(-0.4, -0.1, 0); 
+  maneShield.scale(0.7, 1.8, 1.8); 
+  drawCube(maneShield, maneColor);
+
+  // Side Mane "Jowls"
+  // These wrap around the side to hide the gap when the head is at 45 degrees
+  const maneSideL = new Matrix4(headBase);
+  maneSideL.translate(0.0, -0.2, 0.7);
+  maneSideL.scale(0.8, 1.4, 0.4);
+  drawCube(maneSideL, maneColor);
+
+  const maneSideR = new Matrix4(headBase);
+  maneSideR.translate(0.0, -0.2, -0.7);
+  maneSideR.scale(0.8, 1.4, 0.4);
+  drawCube(maneSideR, maneColor);
+
+  // --- THE FACE (Drawn in front of the shield) ---
+  const head = new Matrix4(headBase);
+  head.scale(1.0, 0.9, 0.9);
+  drawCube(head, bodyColor);
+
+ ` // ===== 1. THE BODY =====
   const body = new Matrix4(base);
   body.scale(3.2, 1.2, 1.4);
   drawCube(body, bodyColor);
@@ -365,6 +403,7 @@ function drawLion() {
   const head = new Matrix4(headBase);
   head.scale(1.0, 0.9, 0.9);
   drawCube(head, bodyColor);
+`;
 
   // Upper Muzzle (Attached to Head)
   const muzzleUpper = new Matrix4(headBase);
@@ -379,7 +418,7 @@ function drawLion() {
   nose.translate(0.95, 0.1, 0.0); 
   nose.scale(0.2, 0.15, 0.3);
   drawCube(nose, [0.1, 0.1, 0.1]); // Charcoal Black
-  
+
   // Lower Mouth/Jaw (Child of Head)
   // We'll rotate this slightly if the "Poke" jump is active
   let mouthOpen = 0;
@@ -418,8 +457,8 @@ function drawLion() {
   // We place these BEHIND the face plane to avoid blocking eyes
   // Back Layer (The large collar)
   const maneBack = new Matrix4(headBase);
-  maneBack.translate(-0.3, 0, 0); // Moved back along X
-  maneBack.scale(1.1, 1.5, 1.5);
+  maneBack.translate(-0.7, 0, 0); // Moved back along X
+  maneBack.scale(1.3, 1.5, 1.8);
   drawCube(maneBack, maneColor);
 
   // Side Tufts (Framing the face)
