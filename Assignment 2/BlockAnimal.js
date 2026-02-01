@@ -349,7 +349,7 @@ function drawLion() {
   const body = new Matrix4(base);
   // Slightly shorter body length to leave a "neck gap" for the mane to swing
   body.scale(2.8, 1.1, 1.3); 
-  body.translate(-0.1, 0, 0); // Push the body back slightly
+  body.translate(0, 0, 0); // Push the body back slightly
   drawCube(body, bodyColor);
 
   // ===== THE HEAD & COLLAR HIERARCHY =====
@@ -404,12 +404,17 @@ function drawLion() {
   head.scale(1.0, 0.9, 0.9);
   drawCube(head, bodyColor);
 `;
-
-  // Upper Muzzle (Attached to Head)
+  // ===== UPPER MUZZLE & TOP LIP =====
   const muzzleUpper = new Matrix4(headBase);
-  muzzleUpper.translate(0.55, 0.0, 0.0); // Slightly higher than center
+  muzzleUpper.translate(0.55, 0.05, 0.0); 
   muzzleUpper.scale(0.8, 0.35, 0.7);
   drawCube(muzzleUpper, bellyColor);
+
+  // Top Lip Line (Fixed to the upper muzzle)
+  const topLip = new Matrix4(headBase);
+  topLip.translate(0.56, -0.12, 0.0); // Positioned at the bottom of the upper muzzle
+  topLip.scale(0.81, 0.02, 0.71);    // Very thin black line
+  drawCube(topLip, [0.05, 0.02, 0.02]);
 
   // ===== THE NOSE (Child of Head/Muzzle area) =====
   const nose = new Matrix4(headBase);
@@ -418,39 +423,47 @@ function drawLion() {
   nose.translate(0.95, 0.1, 0.0); 
   nose.scale(0.2, 0.15, 0.3);
   drawCube(nose, [0.1, 0.1, 0.1]); // Charcoal Black
-
-  // Lower Mouth/Jaw (Child of Head)
-  // We'll rotate this slightly if the "Poke" jump is active
-  let mouthOpen = 0;
-  if (g_pokeActive) {
-      // Mouth opens based on the height of the jump
-      mouthOpen = -g_pokeHeight * 60; 
-  }
+  
+  // ===== LOWER JAW & TONGUE (Level 2 & 3) =====
+  let mouthOpen = g_pokeActive ? -g_pokeHeight * 60 : 0;
 
   const mouthLower = new Matrix4(headBase);
-  mouthLower.translate(0.55, -0.25, 0.0); // Below the upper muzzle
-  mouthLower.rotate(mouthOpen, 0, 0, 1); // Rotates down at the back
-  const mouthModel = new Matrix4(mouthLower);
-  mouthModel.scale(0.75, 0.2, 0.65);
-  drawCube(mouthModel, bellyColor);
+  mouthLower.translate(0.55, -0.12, 0.0); // Pivot at the lip line
+  mouthLower.rotate(mouthOpen, 0, 0, 1);  // Jaw rotation
+  
+  // Bottom Lip (Visual indicator)
+  const bottomLip = new Matrix4(mouthLower);
+  bottomLip.translate(0.01, -0.01, 0.0);
+  bottomLip.scale(0.81, 0.02, 0.71);
+  drawCube(bottomLip, [0.05, 0.02, 0.02]);
 
-  // Tongue (Inside the mouth, only visible when open)
-  if (mouthOpen < -5) {
+  // --- THE TONGUE (Level 3 Hierarchy) ---
+  // It is a child of the lower jaw, so it follows the mouth opening
+  if (Math.abs(mouthOpen) > 1) { 
       const tongue = new Matrix4(mouthLower);
-      tongue.translate(0.2, 0.05, 0);
-      tongue.scale(0.4, 0.1, 0.3);
-      drawCube(tongue, [0.8, 0.3, 0.3]); // Pinkish color
+      // Place it on the "floor" of the mouth
+      tongue.translate(0.3, 0.05, 0); 
+      // Animate the tongue slightly differently for a "loll" effect
+      tongue.rotate(Math.sin(g_time * 10) * 10, 0, 0, 1); 
+      tongue.scale(0.4, 0.08, 0.3);
+      drawCube(tongue, [0.9, 0.3, 0.3]); // Pinkish red
   }
+
+  // Lower Jaw Bone
+  const jawModel = new Matrix4(mouthLower);
+  jawModel.translate(0, -0.15, 0);
+  jawModel.scale(0.75, 0.25, 0.65);
+  drawCube(jawModel, bellyColor);
 
   // Eyes (Placed on the face, outside the mane area)
   const leftEye = new Matrix4(headBase);
   leftEye.translate(0.51, 0.2, 0.25); // Pushed forward slightly
-  leftEye.scale(0.1, 0.1, 0.1);
+  leftEye.scale(0.2, 0.2, 0.2);
   drawCube(leftEye, [0, 0, 0]);
 
   const rightEye = new Matrix4(headBase);
   rightEye.translate(0.51, 0.2, -0.25);
-  rightEye.scale(0.1, 0.1, 0.1);
+  rightEye.scale(0.2, 0.2, 0.2);
   drawCube(rightEye, [0, 0, 0]);
 
   // ===== THE NEW CUBE MANE (Hierarchical to Head) =====
