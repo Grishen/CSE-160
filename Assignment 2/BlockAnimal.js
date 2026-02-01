@@ -348,7 +348,7 @@ function drawLion() {
   // ===== THE BODY (Adjusted for Clearance) =====
   const body = new Matrix4(base);
   // Slightly shorter body length to leave a "neck gap" for the mane to swing
-  body.scale(2.8, 1.1, 1.3); 
+  body.scale(3.5, 1.1, 1.3); 
   body.translate(0, 0, 0); // Push the body back slightly
   drawCube(body, bodyColor);
 
@@ -414,7 +414,7 @@ function drawLion() {
   const topLip = new Matrix4(headBase);
   topLip.translate(0.56, -0.12, 0.0); // Positioned at the bottom of the upper muzzle
   topLip.scale(0.81, 0.02, 0.71);    // Very thin black line
-  drawCube(topLip, [0.05, 0.02, 0.02]);
+  drawCube(topLip, [0.4, 0.4, 0.4]);
 
   // ===== THE NOSE (Child of Head/Muzzle area) =====
   const nose = new Matrix4(headBase);
@@ -435,7 +435,7 @@ function drawLion() {
   const bottomLip = new Matrix4(mouthLower);
   bottomLip.translate(0.01, -0.01, 0.0);
   bottomLip.scale(0.81, 0.02, 0.71);
-  drawCube(bottomLip, [0.05, 0.02, 0.02]);
+  drawCube(bottomLip, [0.4, 0.4, 0.4]);
 
   // --- THE TONGUE (Level 3 Hierarchy) ---
   // It is a child of the lower jaw, so it follows the mouth opening
