@@ -1,0 +1,49 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blocky 3D Lion - Camera Orbit</title>
+  <style>
+    body { background: #222; color: #eee; font-family: sans-serif; margin: 10px; }
+    #webgl { display: block; margin-bottom: 10px; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 1000px; }
+    .panel { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; }
+    label { display: block; margin-bottom: 5px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <canvas id="webgl" width="800" height="600">Please use a browser that supports canvas.</canvas>
+  
+  <div style="color:white; background: #333; padding: 10px;">
+    <p id="fps">FPS: 0</p>
+    
+    <button id="animOn">Animation ON</button>
+    <button id="animOff">Animation OFF</button>
+    <br><br>
+    
+    <label>Global Rotation (Rubric Req): 
+      <input type="range" id="angleSlide" min="0" max="360" value="0">
+    </label><br>
+    
+    <label>Head Angle: 
+      <input type="range" id="headSlide" min="-45" max="45" value="0">
+    </label><br>
+    
+    <label>Leg Angle (Joint 1): 
+      <input type="range" id="legSlide" min="-30" max="30" value="0">
+    </label><br>
+    
+    <label>Foot Angle (Joint 3): 
+      <input type="range" id="footSlide" min="-40" max="40" value="0">
+    </label>
+  </div>
+  <script src="lib/cuon-matrix.js"></script>
+  <script src="lib/webgl-utils.js"></script>
+  <script src="lib/webgl-debug.js"></script>
+  <script src="BlockAnimal.js"></script>
+  <script src="Circle.js"></script>
+  <script src="Point.js"></script>
+  <script src="Triangle.js"></script>
+</body>
+</html>
