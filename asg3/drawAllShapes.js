@@ -283,13 +283,17 @@ function drawAllShapes(){
    sky.matrix.translate(-.5, -.5, -.5);
    sky.render();
 
-   // Floor ====================================
-   var floor = new Cube();
-   floor.color = [.2, .9, .4, 1];
-   floor.textureNum = 0;
-   floor.matrix.translate(0,-.25,0);
-   floor.matrix.scale(20,0,20);
-   floor.matrix.translate(-.5, 0, -.5);
-   floor.render();
-
+   // Blocky Minecraft-style floor ====================================
+   var blockSize = 0.25;
+   var gridSize = 32;
+   for (var gx = 0; gx < gridSize; gx++) {
+      for (var gz = 0; gz < gridSize; gz++) {
+         var block = new Cube();
+         block.color = [.2, .9, .4, 1];
+         block.textureNum = 0;
+         block.matrix.scale(blockSize, blockSize, blockSize);
+         block.matrix.translate(gx - gridSize/2, -1, gz - gridSize/2);
+         block.render();
+      }
+   }
 }

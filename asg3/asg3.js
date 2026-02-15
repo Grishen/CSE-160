@@ -291,8 +291,8 @@ function main() {
 
    initTextures();
 
-   // Specify the color for clearing <canvas>
-   gl.clearColor(0.0, 0.0, 0.0, 1.0);
+   // Minecraft-style sky blue for clear color (shows when looking past skybox)
+   gl.clearColor(0.53, 0.81, 0.98, 1.0);
 
    requestAnimationFrame(tick);
 } // end of main
@@ -389,9 +389,8 @@ function renderScene(){
    var globalRotMat = new Matrix4().rotate(gAnimalGlobalRotation, 0,1,0);
    gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMat.elements);
 
-   // Clear <canvas>
+   // Clear canvas and depth (once) for proper 3D
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-   gl.clear(gl.COLOR_BUFFER_BIT);
 
    drawAllShapes();
 }
