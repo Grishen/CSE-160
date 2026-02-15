@@ -34,6 +34,44 @@ var g_map=[
    // [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
+// Batched floor: one draw call for all blocky floor with grass texture (good FPS)
+var g_floorBatchedPositions = null;
+var g_floorBatchedUVs = null;
+function buildBatchedFloor() {
+   if (g_floorBatchedPositions) return;
+   var blockSize = 0.25;
+   var gridSize = 32;
+   var unitVerts = [
+      0,1,0, 1,1,0, 0,0,0,  0,0,0, 1,0,0, 1,1,0,
+      0,1,1, 1,1,1, 0,0,1,  0,0,1, 1,0,1, 1,1,1,
+      0,1,0, 1,1,0, 1,1,1,  0,1,1, 0,1,0, 1,1,1,
+      0,0,0, 0,0,1, 1,0,0,  1,0,0, 1,0,1, 0,0,1,
+      0,0,0, 0,1,0, 0,1,1,  0,1,1, 0,0,0, 0,0,1,
+      1,0,0, 1,1,0, 1,1,1,  1,1,1, 1,0,0, 1,0,1
+   ];
+   // 12 triangles * 3 vertices * 2 UV = 72 (matches unitVerts 36 vertices)
+   var unitUVs = [
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0
+   ];
+   var pos = [], uv = [];
+   var half = gridSize / 2;
+   for (var gx = 0; gx < gridSize; gx++) {
+      for (var gz = 0; gz < gridSize; gz++) {
+         for (var i = 0; i < unitVerts.length; i += 3) {
+            pos.push(unitVerts[i] * blockSize + (gx - half), unitVerts[i+1] * blockSize - 1, unitVerts[i+2] * blockSize + (gz - half));
+         }
+         for (var k = 0; k < unitUVs.length; k++) uv.push(unitUVs[k]);
+      }
+   }
+   g_floorBatchedPositions = pos;
+   g_floorBatchedUVs = uv;
+}
+
 function drawMap(){
    for(x=0; x<32; x++){
       for(y=0; y<32; y++){
@@ -283,12 +321,11 @@ function drawAllShapes(){
    sky.matrix.translate(-.5, -.5, -.5);
    sky.render();
 
-   // Floor: single textured quad for 60 FPS (1024 block cubes were too slow)
-   var floor = new Cube();
-   floor.color = [.2, .9, .4, 1];
-   floor.textureNum = 0;
-   floor.matrix.translate(0, -.25, 0);
-   floor.matrix.scale(20, 0, 20);
-   floor.matrix.translate(-.5, 0, -.5);
-   floor.render();
+   // Blocky Minecraft floor: one batched draw with grass texture (good FPS)
+   buildBatchedFloor();
+   gl.uniform1i(u_whichTexture, 0);
+   gl.uniform4f(u_FragColor, 0.2, 0.9, 0.4, 1);
+   var identityM = new Matrix4();
+   gl.uniformMatrix4fv(u_ModelMatrix, false, identityM.elements);
+   drawBatchedTriangles3DUV(g_floorBatchedPositions, g_floorBatchedUVs);
 }
