@@ -62,8 +62,10 @@ function buildBatchedFloor() {
    var half = gridSize / 2;
    for (var gx = 0; gx < gridSize; gx++) {
       for (var gz = 0; gz < gridSize; gz++) {
+         var tx = (gx - half) * blockSize;
+         var tz = (gz - half) * blockSize;
          for (var i = 0; i < unitVerts.length; i += 3) {
-            pos.push(unitVerts[i] * blockSize + (gx - half), unitVerts[i+1] * blockSize - 1, unitVerts[i+2] * blockSize + (gz - half));
+            pos.push(unitVerts[i] * blockSize + tx, unitVerts[i+1] * blockSize - 1, unitVerts[i+2] * blockSize + tz);
          }
          for (var k = 0; k < unitUVs.length; k++) uv.push(unitUVs[k]);
       }
