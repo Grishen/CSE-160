@@ -71,6 +71,48 @@ class Camera{
          this.up.elements[0],  this.up.elements[1],   this.up.elements[2]); // (eye, at, up)
    }
 
+   moveUp(){
+      var d = 0.25;
+      this.eye.elements[1] += d;
+      this.at.elements[1] += d;
+      this.viewMat.setLookAt(
+         this.eye.elements[0], this.eye.elements[1],  this.eye.elements[2],
+         this.at.elements[0],  this.at.elements[1],   this.at.elements[2],
+         this.up.elements[0],  this.up.elements[1],   this.up.elements[2]);
+   }
+
+   moveDown(){
+      var d = 0.25;
+      this.eye.elements[1] -= d;
+      this.at.elements[1] -= d;
+      this.viewMat.setLookAt(
+         this.eye.elements[0], this.eye.elements[1],  this.eye.elements[2],
+         this.at.elements[0],  this.at.elements[1],   this.at.elements[2],
+         this.up.elements[0],  this.up.elements[1],   this.up.elements[2]);
+   }
+
+   // Pitch: positive = look up, negative = look down (rotate view around right axis)
+   pitch(deg){
+      var f = new Vector3([0,0,0]);
+      f.set(this.at);
+      f.sub(this.eye);
+      var dist = Math.sqrt(f.elements[0]*f.elements[0] + f.elements[1]*f.elements[1] + f.elements[2]*f.elements[2]);
+      f = f.normalize();
+      var right = new Vector3([0,0,0]);
+      right.set(Vector3.cross(f, this.up));
+      right = right.normalize();
+      var rot = new Matrix4();
+      rot.setRotate(-deg, right.elements[0], right.elements[1], right.elements[2]);
+      var fNew = rot.multiplyVector3(f);
+      fNew = fNew.normalize();
+      this.at.set(this.eye);
+      this.at = this.at.add(fNew.mul(dist));
+      this.viewMat.setLookAt(
+         this.eye.elements[0], this.eye.elements[1],  this.eye.elements[2],
+         this.at.elements[0],  this.at.elements[1],   this.at.elements[2],
+         this.up.elements[0],  this.up.elements[1],   this.up.elements[2]);
+   }
+
    panLeft(){
       var f = new Vector3([0,0,0]);
       f.set(this.at);

@@ -24,9 +24,9 @@
    <button type="button" id="animate_off">OFF</button><br>
    <p>Note:<br>
       This is Charlie a baby sheep. <br>
-      Use WASD or Arrow Keys to move. <br>
-      Q to pan left and E to pan right.<br>
-      Mouse movement will also rotate the camera.<br>
+      Click the canvas to lock the mouse (look around); press Escape to unlock.<br>
+      WASD or Arrow Keys to move. Space = up, Shift = down.<br>
+      Q/E to pan. When mouse is locked, move mouse to look (yaw and pitch).<br>
       R to add block, F to remove block (at current cell, height 0–4).<br>
       Skybox and Floor are textured.
    </p>
@@ -37,15 +37,15 @@
    <script src="lib/cuon-utils.js"></script>
    <script src="lib/cuon-matrix-cse160.js"></script>
 
-   <!-- Add our asg js file -->
+   <!-- Add our asg js file (drawAllShapes before asg3 so addBlockAt/getCellFromWorld exist when keys are used) -->
    <script type=text/javascript src="Triangle.js"></script>
    <script type=text/javascript src="Point.js"></script>
    <script type=text/javascript src="Circle.js"></script>
    <script type=text/javascript src="Cube.js"></script>
    <script type=text/javascript src="CubePrism.js"></script>
-   <script type=text/javascript src="asg3.js"></script>
-   <script type=text/javascript src="drawAllShapes.js"></script>
    <script type=text/javascript src="Camera.js"></script>
+   <script type=text/javascript src="drawAllShapes.js"></script>
+   <script type=text/javascript src="asg3.js"></script>
 
 </body>
 </html>

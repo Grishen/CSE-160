@@ -286,8 +286,15 @@ function main() {
       mouseCam(ev);
    }
    canvas.onmousedown = function(ev){
-      check(ev);
+      if (document.pointerLockElement !== canvas) {
+         canvas.requestPointerLock();
+      } else {
+         check(ev);
+      }
    }
+   document.addEventListener('pointerlockchange', function(){
+      if (document.pointerLockElement === canvas) renderScene();
+   });
 
    initTextures();
 
@@ -341,13 +348,12 @@ function convertCoordinatesEventToGL(ev){
 }
 
 function mouseCam(ev){
-   coord = convertCoordinatesEventToGL(ev);
-   var sensitivity = 3; // lower = slower mouse rotation
-   if(coord[0] < 0.5){ // left side
-      g_camera.panMLeft(coord[0] * -sensitivity);
-   } else{
-      g_camera.panMRight(coord[0] * -sensitivity);
-   }
+   if (document.pointerLockElement !== canvas) return;
+   var sensitivity = 0.15;
+   var dx = ev.movementX || 0, dy = ev.movementY || 0;
+   g_camera.panMRight(-dx * sensitivity);
+   g_camera.pitch(dy * sensitivity);
+   renderScene();
 }
 
 function keydown(ev){
@@ -359,6 +365,12 @@ function keydown(ev){
       g_camera.forward();
    } else if (ev.keyCode==40 || ev.keyCode == 83){ // down Arrow or S
       g_camera.back();
+   } else if (ev.keyCode==32){ // Space - move up (Minecraft-style)
+      g_camera.moveUp();
+      ev.preventDefault();
+   } else if (ev.keyCode==16){ // Shift - move down
+      g_camera.moveDown();
+      ev.preventDefault();
    } else if (ev.keyCode==81){ // Q
       g_camera.panLeft();
    } else if (ev.keyCode==69){ // E

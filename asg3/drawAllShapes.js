@@ -115,7 +115,7 @@ function buildBatchedWorld() {
          var tx = (gx - half) * g_worldBlockSize;
          var tz = (gz - half) * g_worldBlockSize;
          for (var layer = 0; layer < h; layer++) {
-            var ty = -1 + layer * g_worldBlockSize;
+            var ty = -0.75 + layer * g_worldBlockSize; // on top of floor (floor top is -0.75)
             for (var i = 0; i < unitVerts.length; i += 3) {
                pos.push(unitVerts[i] * g_worldBlockSize + tx, unitVerts[i+1] * g_worldBlockSize + ty, unitVerts[i+2] * g_worldBlockSize + tz);
             }
