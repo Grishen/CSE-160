@@ -342,10 +342,11 @@ function convertCoordinatesEventToGL(ev){
 
 function mouseCam(ev){
    coord = convertCoordinatesEventToGL(ev);
+   var sensitivity = 3; // lower = slower mouse rotation
    if(coord[0] < 0.5){ // left side
-      g_camera.panMLeft(coord[0]*-10);
+      g_camera.panMLeft(coord[0] * -sensitivity);
    } else{
-      g_camera.panMRight(coord[0]*-10);
+      g_camera.panMRight(coord[0] * -sensitivity);
    }
 }
 
