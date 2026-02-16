@@ -412,8 +412,8 @@ function drawAllShapes(){
    // World blocks from 32x32 map (height 0-4). Rebuild when add/delete.
    if (g_worldBatchedDirty) buildBatchedWorld();
    if (g_worldBatchedPositions && g_worldBatchedUVs) {
-      gl.uniform1i(u_whichTexture, 0);
-      gl.uniform4f(u_FragColor, 0.5, 0.45, 0.3, 1);
+      gl.uniform1i(u_whichTexture, -2);
+      gl.uniform4f(u_FragColor, 0.55, 0.35, 0.2, 1);
       gl.uniformMatrix4fv(u_ModelMatrix, false, identityM.elements);
       drawBatchedTriangles3DUV(g_worldBatchedPositions, g_worldBatchedUVs);
    }
