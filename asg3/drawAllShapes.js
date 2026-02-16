@@ -239,7 +239,7 @@ function drawAllShapes(){
    frontleft.matrix.rotate(-g_jointAngle, 0, 0, 1); // Joint 1
    var frontleftCoord = new Matrix4(frontleft.matrix);
    frontleft.matrix.rotate(170, 0, 1, 0);
-   frontleft.matrix.scale(.10, -0.10, 0.10);
+   frontleft.matrix.scale(.10, -0.12, 0.10);
    frontleft.matrix.translate(-1.15, -.25, -0.75);
    frontleft.renderfast();
 
@@ -250,7 +250,7 @@ function drawAllShapes(){
    frontright.matrix.rotate(g_jointAngle, 0, 0, 1); // Joint 1
    var frontrightCoord = new Matrix4(frontright.matrix);
    frontright.matrix.rotate(170, 0, 1, 0);
-   frontright.matrix.scale(.10, -0.10, 0.10);
+   frontright.matrix.scale(.10, -0.12, 0.10);
    frontright.matrix.translate(.2, -.25, -0.75);
    frontright.renderfast();
 
@@ -261,7 +261,7 @@ function drawAllShapes(){
    backleft.matrix.rotate(-g_jointAngle, 0, 0, 1); // Joint 1
    var backleftCoord = new Matrix4(backleft.matrix);
    backleft.matrix.rotate(170, 0, 1, 0);
-   backleft.matrix.scale(.10, -0.10, 0.10);
+   backleft.matrix.scale(.10, -0.12, 0.10);
    backleft.matrix.translate(-1.15, -.25, 1.5);
    backleft.renderfast();
 
@@ -272,7 +272,7 @@ function drawAllShapes(){
    backright.matrix.rotate(g_jointAngle, 0, 0, 1); // Joint 1
    var backrightCoord = new Matrix4(backright.matrix);
    backright.matrix.rotate(170, 0, 1, 0);
-   backright.matrix.scale(.10, -0.10, 0.10);
+   backright.matrix.scale(.10, -0.12, 0.10);
    backright.matrix.translate(.2, -.25, 1.5);
    backright.renderfast();
 
@@ -284,8 +284,8 @@ function drawAllShapes(){
    frontleftlow.matrix = frontleftCoord;
    frontleftlow.matrix.rotate(170, 0, 1, 0);
    frontleftlow.matrix.rotate(-g_jointAngle2, 0, 0, 1);
-   frontleftlow.matrix.scale(0.08, 0.08, 0.08);
-   frontleftlow.matrix.translate(-1.25, -1.75, -.8);
+   frontleftlow.matrix.scale(0.08, 0.10, 0.08);
+   frontleftlow.matrix.translate(-1.25, -1.82, -.8);
    frontleftlow.renderfast();
 
    var frontrightlow = new Cube();
@@ -293,8 +293,8 @@ function drawAllShapes(){
    frontrightlow.matrix = frontrightCoord;
    frontrightlow.matrix.rotate(170, 0, 1, 0);
    frontrightlow.matrix.rotate(g_jointAngle2, 0, 0, 1);
-   frontrightlow.matrix.scale(0.08, 0.08, 0.08);
-   frontrightlow.matrix.translate(.37, -1.75, -.8);
+   frontrightlow.matrix.scale(0.08, 0.10, 0.08);
+   frontrightlow.matrix.translate(.37, -1.82, -.8);
    frontrightlow.renderfast();
 
    var backleftlow = new Cube();
@@ -302,8 +302,8 @@ function drawAllShapes(){
    backleftlow.matrix = backleftCoord;
    backleftlow.matrix.rotate(170, 0, 1, 0);
    backleftlow.matrix.rotate(-g_jointAngle2, 0, 0, 1);
-   backleftlow.matrix.scale(0.08, 0.08, 0.08);
-   backleftlow.matrix.translate(-1.25, -1.75, 2);
+   backleftlow.matrix.scale(0.08, 0.10, 0.08);
+   backleftlow.matrix.translate(-1.25, -1.82, 2);
    backleftlow.renderfast();
 
    var backrightlow = new Cube();
@@ -311,8 +311,8 @@ function drawAllShapes(){
    backrightlow.matrix = backrightCoord;
    backrightlow.matrix.rotate(170, 0, 1, 0);
    backrightlow.matrix.rotate(g_jointAngle2, 0, 0, 1);
-   backrightlow.matrix.scale(0.08, 0.08, 0.08);
-   backrightlow.matrix.translate(.37, -1.75, 2);
+   backrightlow.matrix.scale(0.08, 0.10, 0.08);
+   backrightlow.matrix.translate(.37, -1.82, 2);
    backrightlow.renderfast();
 
    // Sky ====================================
