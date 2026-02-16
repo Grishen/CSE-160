@@ -199,7 +199,8 @@ function getCellFromRay(eyeX, eyeY, eyeZ, atX, atY, atZ, isForAdd) {
       prevGx = gx; prevGz = gz;
    }
    if (isForAdd) {
-      return { gx: prevGx, gz: prevGz };
+      var placeDist = 3;
+      return getCellFromWorld(eyeX + placeDist*dx, eyeZ + placeDist*dz);
    }
    return null;
 }
