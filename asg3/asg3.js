@@ -286,15 +286,8 @@ function main() {
       mouseCam(ev);
    }
    canvas.onmousedown = function(ev){
-      if (document.pointerLockElement !== canvas) {
-         canvas.requestPointerLock();
-      } else {
-         check(ev);
-      }
+      check(ev);
    }
-   document.addEventListener('pointerlockchange', function(){
-      if (document.pointerLockElement === canvas) renderScene();
-   });
 
    initTextures();
 
@@ -348,12 +341,13 @@ function convertCoordinatesEventToGL(ev){
 }
 
 function mouseCam(ev){
-   if (document.pointerLockElement !== canvas) return;
-   var sensitivity = 0.15;
-   var dx = ev.movementX || 0, dy = ev.movementY || 0;
-   g_camera.panMRight(-dx * sensitivity);
-   g_camera.pitch(dy * sensitivity);
-   renderScene();
+   coord = convertCoordinatesEventToGL(ev);
+   var sensitivity = 3; // lower = slower mouse rotation
+   if(coord[0] < 0.5){ // left side
+      g_camera.panMLeft(coord[0] * -sensitivity);
+   } else{
+      g_camera.panMRight(coord[0] * -sensitivity);
+   }
 }
 
 function keydown(ev){
@@ -378,11 +372,11 @@ function keydown(ev){
    } else if (ev.keyCode == 82){ // R - add block where camera is looking
       var e = g_camera.eye.elements, a = g_camera.at.elements;
       var cell = getCellFromRay(e[0], e[1], e[2], a[0], a[1], a[2], true);
-      addBlockAt(cell.gx, cell.gz);
+      if (cell) addBlockAt(cell.gx, cell.gz);
    } else if (ev.keyCode == 70){ // F - remove block camera is looking at
       var e = g_camera.eye.elements, a = g_camera.at.elements;
       var cell = getCellFromRay(e[0], e[1], e[2], a[0], a[1], a[2], false);
-      removeBlockAt(cell.gx, cell.gz);
+      if (cell) removeBlockAt(cell.gx, cell.gz);
    }
    renderScene();
 }

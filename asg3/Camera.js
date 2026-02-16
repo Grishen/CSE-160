@@ -111,7 +111,7 @@ class Camera{
       right.set(Vector3.cross(f, this.up));
       right = right.normalize();
       var rot = new Matrix4();
-      rot.setRotate(-deg, right.elements[0], right.elements[1], right.elements[2]);
+      rot.setRotate(deg, right.elements[0], right.elements[1], right.elements[2]);
       var fNew = rot.multiplyVector3(f);
       fNew = fNew.normalize();
       this.at.set(this.eye);
