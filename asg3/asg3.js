@@ -286,15 +286,8 @@ function main() {
       mouseCam(ev);
    }
    canvas.onmousedown = function(ev){
-      if (document.pointerLockElement !== canvas) {
-         canvas.requestPointerLock();
-      } else {
-         check(ev);
-      }
+      check(ev);
    }
-   document.addEventListener('pointerlockchange', function(){
-      if (document.pointerLockElement === canvas) renderScene();
-   });
 
    initTextures();
 
@@ -348,12 +341,13 @@ function convertCoordinatesEventToGL(ev){
 }
 
 function mouseCam(ev){
-   if (document.pointerLockElement !== canvas) return;
-   var sensitivity = 0.15;
-   var dx = ev.movementX || 0, dy = ev.movementY || 0;
-   g_camera.panMRight(-dx * sensitivity);
-   g_camera.pitch(dy * sensitivity);
-   renderScene();
+   coord = convertCoordinatesEventToGL(ev);
+   var sensitivity = 3; // lower = slower mouse rotation
+   if(coord[0] < 0.5){ // left side
+      g_camera.panMLeft(coord[0] * -sensitivity);
+   } else{
+      g_camera.panMRight(coord[0] * -sensitivity);
+   }
 }
 
 function keydown(ev){
@@ -375,14 +369,22 @@ function keydown(ev){
       g_camera.panLeft();
    } else if (ev.keyCode==69){ // E
       g_camera.panRight();
-   } else if (ev.keyCode == 82){ // R - add block at current cell
-      var x = g_camera.eye.elements[0], z = g_camera.eye.elements[2];
-      var cell = getCellFromWorld(x, z);
-      addBlockAt(cell.gx, cell.gz);
-   } else if (ev.keyCode == 70){ // F - remove block at current cell
-      var x = g_camera.eye.elements[0], z = g_camera.eye.elements[2];
-      var cell = getCellFromWorld(x, z);
-      removeBlockAt(cell.gx, cell.gz);
+   } else if (ev.keyCode == 82){ // R - Add block
+      var eye = g_camera.eye.elements;
+      var at = g_camera.at.elements;
+      var cell = getCellFromRay(eye[0], eye[1], eye[2], at[0], at[1], at[2], true);
+      if (cell) {
+         addBlockAt(cell.gx, cell.gz);
+         renderScene(); // Force re-render after change
+      }
+   } else if (ev.keyCode == 70){ // F - Remove block
+      var eye = g_camera.eye.elements;
+      var at = g_camera.at.elements;
+      var cell = getCellFromRay(eye[0], eye[1], eye[2], at[0], at[1], at[2], false);
+      if (cell) {
+         removeBlockAt(cell.gx, cell.gz);
+         renderScene(); // Force re-render after change
+      }
    }
    renderScene();
 }
