@@ -331,33 +331,7 @@ function check(ev) {
   // }
 }
 
-// Ground collision: walk on floor and blocks, gravity + jump (Minecraft-style)
-function applyGroundAndGravity() {
-   var eye = g_camera.eye.elements;
-   var at = g_camera.at.elements;
-   var groundY = getGroundHeight(eye[0], eye[2]);
-   var targetY = groundY + g_camera.eyeHeight;
-
-   if (eye[1] > targetY) {
-      g_camera.velocityY -= 0.02;
-   }
-   eye[1] += g_camera.velocityY;
-
-   if (eye[1] < targetY) {
-      eye[1] = targetY;
-      g_camera.velocityY = 0;
-   }
-
-   var dx = at[0] - eye[0], dy = at[1] - eye[1], dz = at[2] - eye[2];
-   var dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-   if (dist > 1e-6) {
-      at[0] = eye[0] + (dx / dist) * dist;
-      at[1] = eye[1] + (dy / dist) * dist;
-      at[2] = eye[2] + (dz / dist) * dist;
-   }
-   g_camera.updateViewMat();
-}
-
+// Movement =======================================================
 function convertCoordinatesEventToGL(ev){
    var x = ev.clientX; // x coordinate of a mouse pointer
    var y = ev.clientY; // y coordinate of a mouse pointer
@@ -391,28 +365,25 @@ function keydown(ev){
       g_camera.forward();
    } else if (ev.keyCode==40 || ev.keyCode == 83){ // down Arrow or S
       g_camera.back();
-   } else if (ev.keyCode==32){ // Space - jump (Minecraft-style)
-      var groundY = getGroundHeight(g_camera.eye.elements[0], g_camera.eye.elements[2]);
-      var targetY = groundY + g_camera.eyeHeight;
-      if (Math.abs(g_camera.eye.elements[1] - targetY) < 0.05) g_camera.velocityY = 0.35;
+   } else if (ev.keyCode==32){ // Space - move up (Minecraft-style)
+      g_camera.moveUp();
       ev.preventDefault();
-   } else if (ev.keyCode==16){ // Shift - move down (only when in air)
+   } else if (ev.keyCode==16){ // Shift - move down
       g_camera.moveDown();
       ev.preventDefault();
    } else if (ev.keyCode==81){ // Q
       g_camera.panLeft();
    } else if (ev.keyCode==69){ // E
       g_camera.panRight();
-   } else if (ev.keyCode == 82){ // R - add block where camera is looking
-      var e = g_camera.eye.elements, a = g_camera.at.elements;
-      var cell = getCellFromRay(e[0], e[1], e[2], a[0], a[1], a[2], true);
-      if (cell) addBlockAt(cell.gx, cell.gz);
-   } else if (ev.keyCode == 70){ // F - remove block camera is looking at
-      var e = g_camera.eye.elements, a = g_camera.at.elements;
-      var cell = getCellFromRay(e[0], e[1], e[2], a[0], a[1], a[2], false);
-      if (cell) removeBlockAt(cell.gx, cell.gz);
+   } else if (ev.keyCode == 82){ // R - add block at current cell
+      var x = g_camera.eye.elements[0], z = g_camera.eye.elements[2];
+      var cell = getCellFromWorld(x, z);
+      addBlockAt(cell.gx, cell.gz);
+   } else if (ev.keyCode == 70){ // F - remove block at current cell
+      var x = g_camera.eye.elements[0], z = g_camera.eye.elements[2];
+      var cell = getCellFromWorld(x, z);
+      removeBlockAt(cell.gx, cell.gz);
    }
-   applyGroundAndGravity();
    renderScene();
 }
 
@@ -420,7 +391,6 @@ function keydown(ev){
 function tick(){
    g_seconds = performance.now()/1000.0 - g_startTime;
    updateAnimationAngles();
-   applyGroundAndGravity();
    renderScene();
    requestAnimationFrame(tick);
 }
