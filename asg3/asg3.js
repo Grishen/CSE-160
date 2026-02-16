@@ -378,11 +378,11 @@ function keydown(ev){
    } else if (ev.keyCode == 82){ // R - add block where camera is looking
       var e = g_camera.eye.elements, a = g_camera.at.elements;
       var cell = getCellFromRay(e[0], e[1], e[2], a[0], a[1], a[2], true);
-      if (cell) addBlockAt(cell.gx, cell.gz);
+      addBlockAt(cell.gx, cell.gz);
    } else if (ev.keyCode == 70){ // F - remove block camera is looking at
       var e = g_camera.eye.elements, a = g_camera.at.elements;
       var cell = getCellFromRay(e[0], e[1], e[2], a[0], a[1], a[2], false);
-      if (cell) removeBlockAt(cell.gx, cell.gz);
+      removeBlockAt(cell.gx, cell.gz);
    }
    renderScene();
 }
