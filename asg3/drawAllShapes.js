@@ -191,7 +191,7 @@ function getCellFromRay(eyeX, eyeY, eyeZ, atX, atY, atZ, isForAdd) {
       var blockTop = -0.75 + h * g_worldBlockSize;
       if (h > 0 && py >= blockBottom && py <= blockTop) {
          if (isForAdd) {
-            return (prevGx !== null && prevGz !== null) ? { gx: prevGx, gz: prevGz } : null;
+            return { gx: prevGx, gz: prevGz };
          } else {
             return { gx: gx, gz: gz };
          }
