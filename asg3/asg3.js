@@ -375,14 +375,14 @@ function keydown(ev){
       g_camera.panLeft();
    } else if (ev.keyCode==69){ // E
       g_camera.panRight();
-   } else if (ev.keyCode == 82){ // R - add block at current cell
-      var x = g_camera.eye.elements[0], z = g_camera.eye.elements[2];
-      var cell = getCellFromWorld(x, z);
-      addBlockAt(cell.gx, cell.gz);
-   } else if (ev.keyCode == 70){ // F - remove block at current cell
-      var x = g_camera.eye.elements[0], z = g_camera.eye.elements[2];
-      var cell = getCellFromWorld(x, z);
-      removeBlockAt(cell.gx, cell.gz);
+   } else if (ev.keyCode == 82){ // R - add block where camera is looking
+      var e = g_camera.eye.elements, a = g_camera.at.elements;
+      var cell = getCellFromRay(e[0], e[1], e[2], a[0], a[1], a[2], true);
+      if (cell) addBlockAt(cell.gx, cell.gz);
+   } else if (ev.keyCode == 70){ // F - remove block camera is looking at
+      var e = g_camera.eye.elements, a = g_camera.at.elements;
+      var cell = getCellFromRay(e[0], e[1], e[2], a[0], a[1], a[2], false);
+      if (cell) removeBlockAt(cell.gx, cell.gz);
    }
    renderScene();
 }

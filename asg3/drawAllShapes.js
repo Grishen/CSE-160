@@ -152,6 +152,39 @@ function getCellFromWorld(x, z) {
    return { gx: gx, gz: gz };
 }
 
+function getCellFromRay(eyeX, eyeY, eyeZ, atX, atY, atZ, isForAdd) {
+   initWorldMap();
+   var dx = atX - eyeX, dy = atY - eyeY, dz = atZ - eyeZ;
+   var len = Math.sqrt(dx*dx + dy*dy + dz*dz);
+   if (len < 1e-6) return null;
+   dx /= len; dy /= len; dz /= len;
+   var step = 0.05;
+   var maxDist = 15;
+   var prevCell = getCellFromWorld(eyeX, eyeZ);
+   var prevGx = prevCell.gx, prevGz = prevCell.gz;
+   for (var t = step; t < maxDist; t += step) {
+      var px = eyeX + t*dx, py = eyeY + t*dy, pz = eyeZ + t*dz;
+      var cell = getCellFromWorld(px, pz);
+      var gx = cell.gx, gz = cell.gz;
+      var h = g_worldMap[gx][gz];
+      var blockBottom = -0.75;
+      var blockTop = -0.75 + h * g_worldBlockSize;
+      if (h > 0 && py >= blockBottom && py <= blockTop) {
+         if (isForAdd) {
+            return { gx: prevGx, gz: prevGz };
+         } else {
+            return { gx: gx, gz: gz };
+         }
+      }
+      prevGx = gx; prevGz = gz;
+   }
+   if (isForAdd) {
+      var placeDist = 3;
+      return getCellFromWorld(eyeX + placeDist*dx, eyeZ + placeDist*dz);
+   }
+   return null;
+}
+
 function drawMap(){
    for(x=0; x<32; x++){
       for(y=0; y<32; y++){
