@@ -85,7 +85,13 @@ function initWorldMap() {
    if (g_worldMap.length > 0) return;
    for (var i = 0; i < g_worldGridSize; i++) {
       g_worldMap[i] = [];
-      for (var j = 0; j < g_worldGridSize; j++) g_worldMap[i][j] = 0;
+      for (var j = 0; j < g_worldGridSize; j++) {
+         if (i === 0 || i === g_worldGridSize - 1 || j === 0 || j === g_worldGridSize - 1) {
+            g_worldMap[i][j] = 4;
+         } else {
+            g_worldMap[i][j] = 0;
+         }
+      }
    }
 }
 function buildBatchedWorld() {
@@ -127,9 +133,13 @@ function buildBatchedWorld() {
    g_worldBatchedUVs = uv.length > 0 ? uv : null;
    g_worldBatchedDirty = false;
 }
+function isPerimeterCell(gx, gz) {
+   return gx === 0 || gx === g_worldGridSize - 1 || gz === 0 || gz === g_worldGridSize - 1;
+}
 function addBlockAt(gx, gz) {
    initWorldMap();
    if (gx < 0 || gx >= g_worldGridSize || gz < 0 || gz >= g_worldGridSize) return false;
+   if (isPerimeterCell(gx, gz)) return false;
    if (g_worldMap[gx][gz] >= 4) return false;
    g_worldMap[gx][gz]++;
    g_worldBatchedDirty = true;
@@ -138,6 +148,7 @@ function addBlockAt(gx, gz) {
 function removeBlockAt(gx, gz) {
    initWorldMap();
    if (gx < 0 || gx >= g_worldGridSize || gz < 0 || gz >= g_worldGridSize) return false;
+   if (isPerimeterCell(gx, gz)) return false;
    if (g_worldMap[gx][gz] <= 0) return false;
    g_worldMap[gx][gz]--;
    g_worldBatchedDirty = true;
@@ -185,59 +196,12 @@ function getCellFromRay(eyeX, eyeY, eyeZ, atX, atY, atZ, isForAdd) {
    return null;
 }
 
-function drawMap(){
-   for(x=0; x<32; x++){
-      for(y=0; y<32; y++){
-         if ((x == 0 || x == 31) && y%4 == 0){
-            var wall = new Cube();
-            wall.color = [.80, .70, .40, 1.0];
-            wall.textureNum = -2;
-            wall.matrix.scale(0.25,0.25,0.25);
-            wall.matrix.translate(x-16,-.25,y-16);
-            wall.renderfast();
-         }
-         if ((x == 0 || x == 31) && y%4 != 0){
-            var wall = new Cube();
-            wall.color = [.60, .40, .20, 1.0];
-            wall.textureNum = -2;
-            wall.matrix.scale(0.25,0.73,0.25);
-            wall.matrix.translate(x-16,-.25,y-16);
-            wall.renderfast();
-         }
-         if ((y == 0 || y == 31) && x%4 == 0){
-            var wall = new Cube();
-            wall.color = [.80, .70, .50, 1.0];
-            wall.textureNum = -2;
-            wall.matrix.scale(0.25,0.25,0.25);
-            wall.matrix.translate(x-16,-.25,y-16);
-            wall.renderfast();
-         }
-         if ((y == 0 || y == 31) && x%4 != 0){
-            var wall = new Cube();
-            wall.color = [.60, .40, .20, 1.0];
-            wall.textureNum = -2;
-            wall.matrix.scale(0.25,0.73,0.25);
-            wall.matrix.translate(x-16,-.25,y-16);
-            wall.renderfast();
-         }
-         // if (g_map[x][y]==1){
-         //    var wall = new Cube();
-         //    wall.color = [1.0, 1.0, 1.0, 1.0];
-         //    wall.textureNum = -1;
-         //    wall.matrix.translate(x-4,-.25,y-4);
-         //    wall.renderfast();
-         // }
-      }
-   }
-}
-
 function drawAllShapes(){
    // Colors
    var wool = [.62, .77, .64, 1.0];
    var skin = [1, .91, .65, 1.0];
 
-   // Draw Map=================================
-   drawMap();
+   // Wall is drawn as part of world blocks (perimeter cells height 4, no gaps)
    // body =====================================
    var body = new Cube();
    body.color = wool;
