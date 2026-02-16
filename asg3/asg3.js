@@ -286,8 +286,15 @@ function main() {
       mouseCam(ev);
    }
    canvas.onmousedown = function(ev){
-      check(ev);
+      if (document.pointerLockElement !== canvas) {
+         canvas.requestPointerLock();
+      } else {
+         check(ev);
+      }
    }
+   document.addEventListener('pointerlockchange', function(){
+      if (document.pointerLockElement === canvas) renderScene();
+   });
 
    initTextures();
 
@@ -341,13 +348,12 @@ function convertCoordinatesEventToGL(ev){
 }
 
 function mouseCam(ev){
-   coord = convertCoordinatesEventToGL(ev);
-   var sensitivity = 3; // lower = slower mouse rotation
-   if(coord[0] < 0.5){ // left side
-      g_camera.panMLeft(coord[0] * -sensitivity);
-   } else{
-      g_camera.panMRight(coord[0] * -sensitivity);
-   }
+   if (document.pointerLockElement !== canvas) return;
+   var sensitivity = 0.15;
+   var dx = ev.movementX || 0, dy = ev.movementY || 0;
+   g_camera.panMRight(-dx * sensitivity);
+   g_camera.pitch(dy * sensitivity);
+   renderScene();
 }
 
 function keydown(ev){
@@ -369,26 +375,31 @@ function keydown(ev){
       g_camera.panLeft();
    } else if (ev.keyCode==69){ // E
       g_camera.panRight();
-   } else if (ev.keyCode == 82){ // R - Add block
+   } else if (ev.keyCode == 82){ // R - add block where camera is facing
+      // 1. Get the camera's eye and the point it's looking at
       var eye = g_camera.eye.elements;
-      var at = g_camera.at.elements;
+      var at  = g_camera.at.elements;
+
+      // 2. Use raycasting to find the cell in front of the camera
+      // Passing 'true' for isForAdd finds the empty space JUST BEFORE the hit
       var cell = getCellFromRay(eye[0], eye[1], eye[2], at[0], at[1], at[2], true);
+      
       if (cell) {
          addBlockAt(cell.gx, cell.gz);
-         renderScene(); // Force re-render after change
       }
-   } else if (ev.keyCode == 70){ // F - Remove block
+   } else if (ev.keyCode == 70){ // F - remove block where camera is facing
       var eye = g_camera.eye.elements;
-      var at = g_camera.at.elements;
+      var at  = g_camera.at.elements;
+
+      // Passing 'false' for isForAdd finds the actual block being looked at
       var cell = getCellFromRay(eye[0], eye[1], eye[2], at[0], at[1], at[2], false);
+      
       if (cell) {
          removeBlockAt(cell.gx, cell.gz);
-         renderScene(); // Force re-render after change
       }
    }
    renderScene();
 }
-
 // TICK ===========================================================
 function tick(){
    g_seconds = performance.now()/1000.0 - g_startTime;

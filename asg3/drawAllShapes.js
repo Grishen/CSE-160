@@ -175,39 +175,32 @@ function getGroundHeight(x, z) {
 function getCellFromRay(eyeX, eyeY, eyeZ, atX, atY, atZ, isForAdd) {
    initWorldMap();
    var dx = atX - eyeX, dy = atY - eyeY, dz = atZ - eyeZ;
-   var len = Math.sqrt(dx*dx + dy*dx + dz*dz);
+   var len = Math.sqrt(dx*dx + dy*dy + dz*dz);
    if (len < 1e-6) return null;
-   
    dx /= len; dy /= len; dz /= len;
-   
-   var step = 0.02; // Smaller step for better precision
-   var maxDist = 10; // Reach distance
-   
-   var lastValidGx = null;
-   var lastValidGz = null;
-
-   for (var t = 0; t < maxDist; t += step) {
+   var step = 0.05;
+   var maxDist = 15;
+   var prevCell = getCellFromWorld(eyeX, eyeZ);
+   var prevGx = prevCell.gx, prevGz = prevCell.gz;
+   for (var t = step; t < maxDist; t += step) {
       var px = eyeX + t*dx, py = eyeY + t*dy, pz = eyeZ + t*dz;
       var cell = getCellFromWorld(px, pz);
-      
-      var h = g_worldMap[cell.gx][cell.gz];
-      var floorTop = -0.75;
-      var blockTop = floorTop + h * g_worldBlockSize;
-
-      // Check if the ray hit a block or the floor
-      if (py <= blockTop) {
+      var gx = cell.gx, gz = cell.gz;
+      var h = g_worldMap[gx][gz];
+      var blockBottom = -0.75;
+      var blockTop = -0.75 + h * g_worldBlockSize;
+      if (h > 0 && py >= blockBottom && py <= blockTop) {
          if (isForAdd) {
-            // Return the coordinates just before we hit the block
-            return (lastValidGx !== null) ? { gx: lastValidGx, gz: lastValidGz } : null;
+            return { gx: prevGx, gz: prevGz };
          } else {
-            // Return the actual block we hit
-            return { gx: cell.gx, gz: cell.gz };
+            return { gx: gx, gz: gz };
          }
       }
-      
-      // Update the "previous" cell only if it's different from the current one
-      lastValidGx = cell.gx;
-      lastValidGz = cell.gz;
+      prevGx = gx; prevGz = gz;
+   }
+   if (isForAdd) {
+      var placeDist = 3;
+      return getCellFromWorld(eyeX + placeDist*dx, eyeZ + placeDist*dz);
    }
    return null;
 }
