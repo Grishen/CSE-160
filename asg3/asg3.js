@@ -363,6 +363,14 @@ function keydown(ev){
       g_camera.panLeft();
    } else if (ev.keyCode==69){ // E
       g_camera.panRight();
+   } else if (ev.keyCode == 82){ // R - add block at current cell
+      var x = g_camera.eye.elements[0], z = g_camera.eye.elements[2];
+      var cell = getCellFromWorld(x, z);
+      addBlockAt(cell.gx, cell.gz);
+   } else if (ev.keyCode == 70){ // F - remove block at current cell
+      var x = g_camera.eye.elements[0], z = g_camera.eye.elements[2];
+      var cell = getCellFromWorld(x, z);
+      removeBlockAt(cell.gx, cell.gz);
    }
    renderScene();
 }

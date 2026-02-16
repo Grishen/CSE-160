@@ -74,6 +74,84 @@ function buildBatchedFloor() {
    g_floorBatchedUVs = uv;
 }
 
+// World map 32x32, height 0-4 per cell. Add/delete blocks with R / F (at camera cell).
+var g_worldMap = [];
+var g_worldBatchedPositions = null;
+var g_worldBatchedUVs = null;
+var g_worldBatchedDirty = true;
+var g_worldBlockSize = 0.25;
+var g_worldGridSize = 32;
+function initWorldMap() {
+   if (g_worldMap.length > 0) return;
+   for (var i = 0; i < g_worldGridSize; i++) {
+      g_worldMap[i] = [];
+      for (var j = 0; j < g_worldGridSize; j++) g_worldMap[i][j] = 0;
+   }
+}
+function buildBatchedWorld() {
+   initWorldMap();
+   var unitVerts = [
+      0,1,0, 1,1,0, 0,0,0,  0,0,0, 1,0,0, 1,1,0,
+      0,1,1, 1,1,1, 0,0,1,  0,0,1, 1,0,1, 1,1,1,
+      0,1,0, 1,1,0, 1,1,1,  0,1,1, 0,1,0, 1,1,1,
+      0,0,0, 0,0,1, 1,0,0,  1,0,0, 1,0,1, 0,0,1,
+      0,0,0, 0,1,0, 0,1,1,  0,1,1, 0,0,0, 0,0,1,
+      1,0,0, 1,1,0, 1,1,1,  1,1,1, 1,0,0, 1,0,1
+   ];
+   var unitUVs = [
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0,
+      0,0, 1,0, 1,1,  0,1, 1,1, 0,0
+   ];
+   var pos = [], uv = [];
+   var half = g_worldGridSize / 2;
+   for (var gx = 0; gx < g_worldGridSize; gx++) {
+      for (var gz = 0; gz < g_worldGridSize; gz++) {
+         var h = g_worldMap[gx][gz];
+         if (h <= 0) continue;
+         var tx = (gx - half) * g_worldBlockSize;
+         var tz = (gz - half) * g_worldBlockSize;
+         for (var layer = 0; layer < h; layer++) {
+            var ty = -1 + layer * g_worldBlockSize;
+            for (var i = 0; i < unitVerts.length; i += 3) {
+               pos.push(unitVerts[i] * g_worldBlockSize + tx, unitVerts[i+1] * g_worldBlockSize + ty, unitVerts[i+2] * g_worldBlockSize + tz);
+            }
+            for (var k = 0; k < unitUVs.length; k++) uv.push(unitUVs[k]);
+         }
+      }
+   }
+   g_worldBatchedPositions = pos.length > 0 ? pos : null;
+   g_worldBatchedUVs = uv.length > 0 ? uv : null;
+   g_worldBatchedDirty = false;
+}
+function addBlockAt(gx, gz) {
+   initWorldMap();
+   if (gx < 0 || gx >= g_worldGridSize || gz < 0 || gz >= g_worldGridSize) return false;
+   if (g_worldMap[gx][gz] >= 4) return false;
+   g_worldMap[gx][gz]++;
+   g_worldBatchedDirty = true;
+   return true;
+}
+function removeBlockAt(gx, gz) {
+   initWorldMap();
+   if (gx < 0 || gx >= g_worldGridSize || gz < 0 || gz >= g_worldGridSize) return false;
+   if (g_worldMap[gx][gz] <= 0) return false;
+   g_worldMap[gx][gz]--;
+   g_worldBatchedDirty = true;
+   return true;
+}
+function getCellFromWorld(x, z) {
+   var half = g_worldGridSize / 2;
+   var gx = Math.floor(x / g_worldBlockSize + half);
+   var gz = Math.floor(z / g_worldBlockSize + half);
+   gx = Math.max(0, Math.min(g_worldGridSize - 1, gx));
+   gz = Math.max(0, Math.min(g_worldGridSize - 1, gz));
+   return { gx: gx, gz: gz };
+}
+
 function drawMap(){
    for(x=0; x<32; x++){
       for(y=0; y<32; y++){
@@ -330,4 +408,13 @@ function drawAllShapes(){
    var identityM = new Matrix4();
    gl.uniformMatrix4fv(u_ModelMatrix, false, identityM.elements);
    drawBatchedTriangles3DUV(g_floorBatchedPositions, g_floorBatchedUVs);
+
+   // World blocks from 32x32 map (height 0-4). Rebuild when add/delete.
+   if (g_worldBatchedDirty) buildBatchedWorld();
+   if (g_worldBatchedPositions && g_worldBatchedUVs) {
+      gl.uniform1i(u_whichTexture, 0);
+      gl.uniform4f(u_FragColor, 0.5, 0.45, 0.3, 1);
+      gl.uniformMatrix4fv(u_ModelMatrix, false, identityM.elements);
+      drawBatchedTriangles3DUV(g_worldBatchedPositions, g_worldBatchedUVs);
+   }
 }
