@@ -163,6 +163,15 @@ function getCellFromWorld(x, z) {
    return { gx: gx, gz: gz };
 }
 
+function getGroundHeight(x, z) {
+   initWorldMap();
+   var cell = getCellFromWorld(x, z);
+   var h = g_worldMap[cell.gx][cell.gz];
+   var floorTop = -0.75;
+   if (h <= 0) return floorTop;
+   return floorTop + h * g_worldBlockSize;
+}
+
 function getCellFromRay(eyeX, eyeY, eyeZ, atX, atY, atZ, isForAdd) {
    initWorldMap();
    var dx = atX - eyeX, dy = atY - eyeY, dz = atZ - eyeZ;
