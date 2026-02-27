@@ -1,5 +1,14 @@
 // HelloCube.js (c) 2012 matsuda
 // Vertex shader program
+// This file is your LitWorld.js with a minimal OBJ-model integration added.
+//
+// IMPORTANT:
+// 1) Put an actual OBJ file named "model.obj" next to index.html (same folder), OR change g_objModelPath below.
+// 2) Make sure the lab OBJ loader scripts that define OBJDoc are included BEFORE Model.js.
+
+
+// HelloCube.js (c) 2012 matsuda
+// Vertex shader program
 var VSHADER_SOURCE = `
   uniform mat4 u_ModelMatrix;
   uniform mat4 u_ViewMatrix;
@@ -21,12 +30,9 @@ var VSHADER_SOURCE = `
     v_Normal = u_NormalMatrix * a_Normal;
     gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * a_Position;
 
-    vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
-
     vec4 vertexPosition = u_ModelMatrix * a_Position;
 
     v_LightDirection = normalize(u_LightPosition - vec3(vertexPosition));
-
     v_EyeDirection = normalize(u_CameraPosition - vec3(vertexPosition));
   }`
 
@@ -55,45 +61,39 @@ var FSHADER_SOURCE = `
   uniform vec3 u_AmbientLight;
 
   void main() {
-  if (u_SelectedTexture == 0) {
-    gl_FragColor = (u_FragColor * u_ColorWeight) + ((1.0 - u_ColorWeight) * texture2D(u_Texture0, v_UV));
-  } else if (u_SelectedTexture == 1) {
-    gl_FragColor = (u_FragColor * u_ColorWeight) + ((1.0 - u_ColorWeight) * texture2D(u_Texture1, v_UV));
-  } else if (u_SelectedTexture == 2) {
-    gl_FragColor = (u_FragColor * u_ColorWeight) + ((1.0 - u_ColorWeight) * texture2D(u_Texture2, v_UV));
-  } else if (u_SelectedTexture == -1) {
-    gl_FragColor = vec4((v_Normal.xyz+1.0)/2.0, 1.0);
-  } else {
-    gl_FragColor = u_FragColor;
-  }
-
-  if (u_Lit == 1) {
-    float nDotL = max(dot(v_LightDirection, v_Normal.xyz), 0.0);
-
-    vec3 diffuse = u_LightColor * gl_FragColor.rgb * nDotL;
-
-    vec3 ambient = u_AmbientLight * gl_FragColor.rgb;
-
-    vec3 reflection = reflect(-v_LightDirection, v_Normal.xyz);
-
-    float specular = pow(max(dot(v_EyeDirection, reflection), 0.0), 10.0);
-
-    vec4 litColor = vec4(diffuse + ambient + specular, gl_FragColor.a);
-
-    vec4 spotlightShadowColor = vec4(ambient, gl_FragColor.a);
-
-    if (u_Spotlit == 1) {
-      if (dot(v_LightDirection, vec3(0.0, 1.0, 0.0)) > 0.5) {
-        gl_FragColor = litColor;
-      } else {
-        gl_FragColor = spotlightShadowColor;
-      }
+    if (u_SelectedTexture == 0) {
+      gl_FragColor = (u_FragColor * u_ColorWeight) + ((1.0 - u_ColorWeight) * texture2D(u_Texture0, v_UV));
+    } else if (u_SelectedTexture == 1) {
+      gl_FragColor = (u_FragColor * u_ColorWeight) + ((1.0 - u_ColorWeight) * texture2D(u_Texture1, v_UV));
+    } else if (u_SelectedTexture == 2) {
+      gl_FragColor = (u_FragColor * u_ColorWeight) + ((1.0 - u_ColorWeight) * texture2D(u_Texture2, v_UV));
+    } else if (u_SelectedTexture == -1) {
+      gl_FragColor = vec4((v_Normal.xyz+1.0)/2.0, 1.0);
     } else {
-      gl_FragColor = litColor;
+      gl_FragColor = u_FragColor;
     }
-    
-  }
-  
+
+    if (u_Lit == 1) {
+      float nDotL = max(dot(v_LightDirection, v_Normal.xyz), 0.0);
+      vec3 diffuse = u_LightColor * gl_FragColor.rgb * nDotL;
+      vec3 ambient = u_AmbientLight * gl_FragColor.rgb;
+
+      vec3 reflection = reflect(-v_LightDirection, v_Normal.xyz);
+      float specular = pow(max(dot(v_EyeDirection, reflection), 0.0), 10.0);
+
+      vec4 litColor = vec4(diffuse + ambient + specular, gl_FragColor.a);
+      vec4 spotlightShadowColor = vec4(ambient, gl_FragColor.a);
+
+      if (u_Spotlit == 1) {
+        if (dot(v_LightDirection, vec3(0.0, 1.0, 0.0)) > 0.5) {
+          gl_FragColor = litColor;
+        } else {
+          gl_FragColor = spotlightShadowColor;
+        }
+      } else {
+        gl_FragColor = litColor;
+      }
+    }
   }`;
 
 // Global Vars
@@ -125,9 +125,12 @@ let u_ColorWeight;
 let skyCube;
 
 let lightbulb;
-let litSphere;
-let litSphereDEBUG;
 
+
+// OBJ Model (Assignment requirement)
+let objModel;
+g_objModelPath = "bunny.obj";
+g_objModelScale = 1.5;   // bunny is usually tiny, scale it up
 
 let groundCube;
 let groundCube2;
@@ -142,10 +145,7 @@ let maxWallHeight = 5;
 
 // INIT FUNCTIONS //
 function setupWebGL() {
-  // Retrieve <canvas> element
   canvas = document.getElementById('webgl');
-
-  // Get the rendering context for WebGL
   gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
@@ -157,14 +157,11 @@ function setupWebGL() {
   window.addEventListener("resize", (e) => {
     gl.canvas.width = window.innerWidth;
     gl.canvas.height = window.innerHeight;
-
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   });
 
   gl.enable(gl.DEPTH_TEST);
 }
-
-// HTML FUNCTIONS //
 
 // UI Globals
 let g_normalOn = false;
@@ -196,25 +193,17 @@ function addActionsForHtmlUI() {
 }
 
 function main() {
-  // Set up canvas and gl vars
   setupWebGL();
-
-  // Set up GLSL shader program and connect vars
   connectVariablesToGLSL();
-
-  // Add HTML UI Actions
   addActionsForHtmlUI();
 
-  // Register function (event handler) to be called on a mouse press
   canvas.onclick = click;
   document.onkeydown = keydown;
   canvas.onmousemove = function (ev) { if (ev.buttons == 1) { click(ev) } };
 
-  // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
   camera = new Camera();
-
   createWorldObjects();
 
   requestAnimationFrame(tick);
@@ -224,22 +213,21 @@ let g_startTime = performance.now() / 1000.0;
 let g_seconds = performance.now() / 1000.0 - g_startTime;
 
 function tick() {
-  // Save time
   g_seconds = performance.now() / 1000.0 - g_startTime;
 
   if (g_lightAnimateOn) {
     lightbulb.position.elements = [Math.cos(g_seconds) * 5 + 5.0, 8.0, Math.sin(g_seconds) * 5 + 7.0];
-    // Set the light direction (in the world coordinate)
     gl.uniform3f(u_LightPosition, Math.cos(g_seconds) * 5 + 5.0, 8.0, Math.sin(g_seconds) * 5 + 7.0);
   } else {
     lightbulb.position.elements = [Math.cos(g_lightRotation) * 5 + 5.0, 8.0, Math.sin(g_lightRotation) * 5 + 7.0];
-    // Set the light direction (in the world coordinate)
     gl.uniform3f(u_LightPosition, Math.cos(g_lightRotation) * 5 + 5.0, 8.0, Math.sin(g_lightRotation) * 5 + 7.0);
   }
 
+  if (objModel) {
+    objModel.rotation.elements[1] += 0.5;
+  }
 
   renderScene();
-
   requestAnimationFrame(tick);
 }
 
@@ -248,9 +236,7 @@ function updatePerformanceIndicator(frameStartTime) {
   perfText.innerHTML = "MS: " + Math.floor((performance.now() - frameStartTime) * 10) / 10 + " | FPS: " + Math.floor(10000 / (performance.now() - frameStartTime) / 10);
 }
 
-function click(ev) {
-
-}
+function click(ev) { }
 
 function keydown(ev) {
   switch (ev.keyCode) {
@@ -261,17 +247,6 @@ function keydown(ev) {
     case 81: camera.panHorizontal(.1); break;
     case 69: camera.panHorizontal(-.1); break;
   }
-}
-
-function convertCoordinatesEventToGL(ev) {
-  var x = ev.clientX; // x coordinate of a mouse pointer
-  var y = ev.clientY; // y coordinate of a mouse pointer
-  var rect = ev.target.getBoundingClientRect();
-
-  x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2);
-  y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2);
-
-  return ([x, y]);
 }
 
 function createWorldObjects() {
@@ -289,11 +264,7 @@ function createWorldObjects() {
   skyCube.solidColorWeight = 0.5;
   skyCube.scale.mul(999);
 
-  // Map
-  // In its own file Map.js
-
-  // WALLS //
-
+  // WALLS (Map.js provides `map`)
   for (let i = 0; i < 32; i++) {
     for (let j = 0; j < 32; j++) {
       let wallHeight = map[i][j];
@@ -301,83 +272,80 @@ function createWorldObjects() {
         let wall = new Cube();
         wall.position = new Vector3([i, wallHeight - 1, j]);
         wall.color = [0.35, 0.25, 0.15, 1.0];
-        let centerness = (Math.abs(15.5 - i) / 15.5 + Math.abs(15.5 - j) / 15.5) / 2
+        let centerness = (Math.abs(15.5 - i) / 15.5 + Math.abs(15.5 - j) / 15.5) / 2;
         wall.solidColorWeight = centerness * 0.9 + Math.random() * 0.1;
         wallCubes.push(wall);
-        // console.log("wall at ", i, " , ", wallHeight - 1, " , ", j);
         wallHeight--;
       }
     }
   }
 
-  // Light
-  // Set the light color (white)
+  // Light uniforms
   gl.uniform3f(u_LightColor, g_lightColorX, g_lightColorY, g_lightColorZ);
-  // Set the light direction (in the world coordinate)
   gl.uniform3f(u_LightPosition, 5.0, 8.0, 7.0);
-  // Set the ambient light
   gl.uniform3f(u_AmbientLight, 0.3, 0.3, 0.3);
 
-  // Set the scene to lit by a point light
   gl.uniform1i(u_Lit, 1);
   gl.uniform1i(u_Spotlit, 0);
 
-  // Lightbulb sphere
+  // Light marker cube
   lightbulb = new Cube();
   lightbulb.position = new Vector3([5.0, 8.0, 7.0]);
   lightbulb.color = [0.9, 0.9, 0.9, 1.0];
   lightbulb.scale.elements = [0.25, 0.25, 0.25];
   lightbulb.solidColorWeight = 1.0;
 
-  // Light-testing sphere
-  litSphere = new Sphere();
-  litSphere.position = new Vector3([8, 6, 8]);
-  litSphere.color = [0.15, 0.45, 0.35, 1.0];
-  litSphere.solidColorWeight = 0.0;
 
-  // Light-testing sphere DEBUG
-  litSphereDEBUG = new Sphere();
-  litSphereDEBUG.position = new Vector3([8, 8, 8]);
-  litSphereDEBUG.color = [0.15, 0.45, 0.35, 1.0];
-  litSphereDEBUG.solidColorWeight = 0.0;
+  // OBJ Model (loaded asynchronously)
+  // Put an actual OBJ file named "model.obj" in the same folder as index.html,
+  // or change g_objModelPath above to your OBJ file name/path.
+  try {
+    if (typeof OBJDoc === 'undefined') {
+      console.log('OBJDoc is not defined. Make sure your OBJ loader scripts are included (from the lab) before Model.js.');
+    }
+  objModel = new Model(g_objModelPath, g_objModelScale);
+
+  objModel.position = new Vector3([8, 2, 8]);  // put it in view
+  objModel.rotation = new Vector3([0, 180, 0]);
+  objModel.color = [0.9, 0.9, 0.9, 1.0];
+  objModel.solidColorWeight = 1.0;
+  } catch (e) {
+    console.log('Failed to init OBJ model:', e);
+  }
 }
 
 function renderScene() {
   let tickStartTime = performance.now();
 
-  // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.clear(gl.DEPTH_BUFFER_BIT);
 
   camera.update();
 
-  // SET LIGHT COLOR BASED ON SLIDER VALS
   gl.uniform3f(u_LightColor, g_lightColorX, g_lightColorY, g_lightColorZ);
 
   gl.uniform3f(u_CameraPosition, camera.position.elements[0], camera.position.elements[1], camera.position.elements[2]);
 
-  // Select sky texture in shader uniform
+  // Sky texture
   gl.uniform1i(u_SelectedTexture, 1);
   skyCube.render(gl, camera);
 
-  // Select sunspot or normal texture in shader uniform 
+  // Walls texture OR normals
   if (g_normalOn) { gl.uniform1i(u_SelectedTexture, -1); } else { gl.uniform1i(u_SelectedTexture, 0); }
-
-  // Cubes
   for (let i = 0; i < wallCubes.length; i++) {
     wallCubes[i].render(gl, camera);
   }
 
+  // Light marker
   lightbulb.render(gl, camera);
 
-  // Select flat color or normal texture in shader uniform 
+  // Spheres flat color OR normals
   if (g_normalOn) { gl.uniform1i(u_SelectedTexture, -1); } else { gl.uniform1i(u_SelectedTexture, -999); }
-  litSphere.render(gl, camera);
 
-  litSphereDEBUG.render(gl, camera);
+  // OBJ Model (if loaded)
+  if (objModel && objModel.ready) { objModel.render(gl, camera); }
 
-
-  updatePerformanceIndicator(tickStartTime)
+  updatePerformanceIndicator(tickStartTime);
 }
 
 function connectVariablesToGLSL() {

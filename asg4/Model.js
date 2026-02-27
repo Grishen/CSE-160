@@ -1,4 +1,9 @@
 // Model.js
+// Self-contained OBJ loader (no OBJDoc needed)
+// Supports: v, vt, vn, f (triangles + quads; quads triangulated)
+// Faces can be: v/vt/vn, v//vn, v/vt, v
+// Uses drawArrays (expands faces to flat arrays)
+
 class Model {
   constructor(objPath, scale = 1.0) {
     this.vertexBuffer = null;
@@ -15,7 +20,7 @@ class Model {
     this.normalMatrix = new Matrix4();
 
     this.color = [1.0, 1.0, 1.0, 1.0];
-    this.solidColorWeight = 1.0; // flat color by default
+    this.solidColorWeight = 1.0;
 
     this.loadOBJ(objPath);
   }
@@ -23,66 +28,152 @@ class Model {
   loadOBJ(objPath) {
     const request = new XMLHttpRequest();
     request.onreadystatechange = () => {
-      if (request.readyState === 4 && request.status === 200) {
-        this.onOBJLoaded(request.responseText);
+      if (request.readyState === 4) {
+        if (request.status === 200) {
+          this.onOBJLoaded(request.responseText);
+        } else {
+          console.log("OBJ load failed:", objPath, "status:", request.status);
+        }
       }
     };
-    request.open('GET', objPath, true);
+    request.open("GET", objPath, true);
     request.send();
   }
 
   onOBJLoaded(fileString) {
-    // This uses the lab’s OBJ loader classes (OBJDoc)
-    const objDoc = new OBJDoc('model');
-    const result = objDoc.parse(fileString, 1.0, true);
-    if (!result) {
-      console.log('Failed to parse OBJ file');
-      return;
-    }
+    const parsed = this.parseOBJ(fileString);
 
-    // Build interleaved arrays for positions, normals, and UVs
-    const drawingInfo = objDoc.getDrawingInfo();
+    this.vertices = new Float32Array(parsed.vertices);
+    this.normals = new Float32Array(parsed.normals);
+    this.uvs = new Float32Array(parsed.uvs);
 
-    this.vertices = new Float32Array(drawingInfo.vertices);
-    this.normals  = new Float32Array(drawingInfo.normals);
-    this.uvs      = new Float32Array(drawingInfo.texCoords);
-    this.numVertices = drawingInfo.indices.length;
-
-    this.indices = new Uint16Array(drawingInfo.indices);
+    this.numVertices = this.vertices.length / 3;
 
     // Create buffers
     this.vertexBuffer = gl.createBuffer();
     this.normalBuffer = gl.createBuffer();
-    this.uvBuffer     = gl.createBuffer();
-    this.indexBuffer  = gl.createBuffer();
+    this.uvBuffer = gl.createBuffer();
 
-    if (!this.vertexBuffer || !this.normalBuffer || !this.uvBuffer || !this.indexBuffer) {
-      console.log('Failed to create buffers for OBJ model');
+    if (!this.vertexBuffer || !this.normalBuffer || !this.uvBuffer) {
+      console.log("Failed to create buffers for OBJ model");
       return;
     }
 
-    // Upload data to GPU
+    // Upload to GPU
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.vertices, gl.STATIC_DRAW);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.normals, gl.STATIC_DRAW);
 
-    if (this.uvs && this.uvs.length > 0) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.uvs, gl.STATIC_DRAW);
-    }
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.uvs, gl.STATIC_DRAW);
 
     this.ready = true;
+    console.log("OBJ loaded. Triangles:", this.numVertices / 3);
+  }
+
+  // Convert OBJ index (1-based, can be negative) to 0-based
+  fixIndex(i, len) {
+    if (i === undefined || i === null || i === "") return null;
+    const n = parseInt(i, 10);
+    if (Number.isNaN(n)) return null;
+    if (n > 0) return n - 1;
+    // negative index: -1 means last
+    return len + n;
+  }
+
+  parseOBJ(text) {
+    const positions = [];
+    const texcoords = [];
+    const normals = [];
+
+    const outVerts = [];
+    const outUVs = [];
+    const outNorms = [];
+
+    const lines = text.split("\n");
+
+    const addVertex = (vIdx, vtIdx, vnIdx) => {
+      // position
+      outVerts.push(
+        positions[vIdx * 3 + 0],
+        positions[vIdx * 3 + 1],
+        positions[vIdx * 3 + 2]
+      );
+
+      // uv (if missing, push 0,0)
+      if (vtIdx !== null && vtIdx !== undefined) {
+        outUVs.push(
+          texcoords[vtIdx * 2 + 0],
+          texcoords[vtIdx * 2 + 1]
+        );
+      } else {
+        outUVs.push(0.0, 0.0);
+      }
+
+      // normal (if missing, push 0,1,0)
+      if (vnIdx !== null && vnIdx !== undefined) {
+        outNorms.push(
+          normals[vnIdx * 3 + 0],
+          normals[vnIdx * 3 + 1],
+          normals[vnIdx * 3 + 2]
+        );
+      } else {
+        outNorms.push(0.0, 1.0, 0.0);
+      }
+    };
+
+    for (let rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith("#")) continue;
+
+      const parts = line.split(/\s+/);
+      const kw = parts[0];
+
+      if (kw === "v") {
+        positions.push(
+          parseFloat(parts[1]),
+          parseFloat(parts[2]),
+          parseFloat(parts[3])
+        );
+      } else if (kw === "vt") {
+        // vt u v
+        texcoords.push(parseFloat(parts[1]), parseFloat(parts[2]));
+      } else if (kw === "vn") {
+        normals.push(
+          parseFloat(parts[1]),
+          parseFloat(parts[2]),
+          parseFloat(parts[3])
+        );
+      } else if (kw === "f") {
+        // faces: parts[1..]
+        // each vertex token: v/vt/vn or v//vn or v/vt or v
+        const face = parts.slice(1).map(tok => {
+          const [v, vt, vn] = tok.split("/");
+          const vIdx = this.fixIndex(v, positions.length / 3);
+          const vtIdx = this.fixIndex(vt, texcoords.length / 2);
+          const vnIdx = this.fixIndex(vn, normals.length / 3);
+          return { vIdx, vtIdx, vnIdx };
+        });
+
+        // triangulate fan: (0, i, i+1)
+        for (let i = 1; i + 1 < face.length; i++) {
+          const a = face[0], b = face[i], c = face[i + 1];
+          addVertex(a.vIdx, a.vtIdx, a.vnIdx);
+          addVertex(b.vIdx, b.vtIdx, b.vnIdx);
+          addVertex(c.vIdx, c.vtIdx, c.vnIdx);
+        }
+      }
+    }
+
+    return { vertices: outVerts, uvs: outUVs, normals: outNorms };
   }
 
   calculateMatrix() {
-    let [x, y, z] = this.position.elements;
-    let [rx, ry, rz] = this.rotation.elements;
-    let [sx, sy, sz] = this.scale.elements;
+    const [x, y, z] = this.position.elements;
+    const [rx, ry, rz] = this.rotation.elements;
+    const [sx, sy, sz] = this.scale.elements;
 
     this.modelMatrix
       .setTranslate(x, y, z)
@@ -97,7 +188,7 @@ class Model {
   }
 
   render(gl, camera) {
-    if (!this.ready) return; // wait until OBJ is loaded
+    if (!this.ready) return;
 
     this.calculateMatrix();
 
@@ -116,28 +207,22 @@ class Model {
     gl.vertexAttribPointer(a_Normal, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(a_Normal);
 
-    // UVs (if present)
-    if (this.uvs && this.uvs.length > 0) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
-      gl.vertexAttribPointer(a_UV, 2, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(a_UV);
-    } else {
-      gl.disableVertexAttribArray(a_UV);
-    }
+    // UVs
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
+    gl.vertexAttribPointer(a_UV, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_UV);
 
-    // Color (Phong will light this)
-    const rgba = this.color;
-    gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+    // Color
+    gl.uniform4f(u_FragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
     gl.uniform1f(u_ColorWeight, this.solidColorWeight);
 
-    // This model is not using textures → select flat color
-    if (g_normalOn) {
-      gl.uniform1i(u_SelectedTexture, -1); // normal visualization
+    // For your shader: select flat color unless normals view is on
+    if (typeof g_normalOn !== "undefined" && g_normalOn) {
+      gl.uniform1i(u_SelectedTexture, -1);
     } else {
-      gl.uniform1i(u_SelectedTexture, -999); // flat color
+      gl.uniform1i(u_SelectedTexture, -999);
     }
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    gl.drawElements(gl.TRIANGLES, this.numVertices, gl.UNSIGNED_SHORT, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, this.numVertices);
   }
 }
