@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Grishen Hestiyas CSE 160 asg5</title>
+    </head>
+
+    <style>
+        .stats {
+            position: fixed;
+            top: 0;
+            right: 0;
+        }
+        
+    </style>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.163.0/examples/jsm/"
+            }
+        }
+    </script>
+    <body>
+        <script type="module" src="asg5.js"></script>
+        <script type="module" src="./../src/sky.js"></script>
+        <canvas id="c"></canvas>
+        <div class="stats">
+            <script> javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='https://mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()</script>
+        </div>
+    </body>
+    <br>
+    Daksh Shah <br>
+    1953946 <br>
+    dakshah@ucsc.edu <br>
+    Grader Notes: <br>
+    - Performance mode means that reflections update at longer intervals to improve performance (approx every half second). This about doubles FPS <br>
+    - Aurora adapted from https://www.shadertoy.com/view/XtGGRt.<br>
+    - Stars/Auroras are animated within the fragment shader. <br>
+    - Water has reflections from the light of the auroras and from the surrounding environment with a NormalMap overlayed on top.<br>
+    - Terrain from https://sketchfab.com/3d-models/snowy-mountain-terrain-9fa3c56fd32746bcb0e06cd2c4229ca0 <br>
+    - Helicopter from https://www.cgtrader.com/free-3d-models/aircraft/helicopter/cartoon-low-poly-helicopter
+    
+</html>
