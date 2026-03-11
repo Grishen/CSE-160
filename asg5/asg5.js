@@ -53,9 +53,9 @@ function setUpScene() {
     sky.scale.setScalar(1000);
     scene.add(sky);
 
-    loader.load('/textures/scenery/SM_DiffJPG2.jpg', (texture) => {
+    loader.load('textures/scenery/SM_DiffJPG2.jpg', (texture) => {
         // texture.preload();
-        objLoader.load('/textures/scenery/SnowyMountainMesh.obj', (root) => {
+        objLoader.load('textures/scenery/SnowyMountainMesh.obj', (root) => {
             // root.position.x = 4;
             root.position.y = -40;
             // root.position.z = 0;
